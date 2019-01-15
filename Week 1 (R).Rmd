@@ -1,0 +1,116 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+Assume the outcome random variable $Y$ has the functional form 
+
+$$Y(X_1, X_2, \omega) = 0.1 X_1 + 0.2 X_2 - \omega,$$
+and we want to get the conditional average treatment effect from $X_1$ being $x_1$ to $x_1^\prime$ given $X_2 = x_2$, which is
+
+$$
+E \left [Y(x_1, X_2, \omega) - Y(x_1 ^ \prime, X_2, \omega) \mid X_2 = x_2 \right ] = 
+E \left [Y(x_1, X_2, \omega) \mid X_2 = x_2 \right ] - \left [Y(x_1 ^ \prime, X_2, \omega) \mid X_2 = x_2 \right ]
+$$
+Let us consider a special case where $X_1$, $X_2$, and $w_1$ are all discrete random variables. (If they are continuous variables, then we have to use some techinques rather than just using conditional means to get the ATE, e.g. kernel density regression).
+
+$$
+\Pr (X_1 = 1) = 0.4, \Pr (X_1 = 2) = 0.6 \\
+\Pr (X_2 = 0) = \Pr (X_2 = 1) = 0.5 \\
+\omega = X_1 ^ 2 + c, \Pr (c = -1) = \Pr (c = 1) = 0.5
+$$
+
+Here, we assume $X_2$ is independent random variable with both $X_1$ and $\omega$ for simplicity. You could try the case with $X_2$ being correlated with $X_1$ and $\omega$, and the conclusion should be unaffected.
+
+Knowing the functional form of $Y(X_1, X_2, \omega)$, we know the ATE of changing $X_1$ from $x_1 = 1$ to $x_1^\prime = 2$ is $0.1$ given any $X_2$. 
+
+##### data generating
+
+```{r}
+# set seed
+set.seed(1234)
+N = 1000000 # sample size
+
+# X1
+X1 <- rep(1, N)
+X1[runif(N) > 0.4] <- 2
+
+# X2
+X2 <- rep(1, N)
+X2[runif(N) > 0.5] <- 0
+
+# ω
+c <- rep(1, N)
+c[runif(N) > 0.5] <- -1
+w <- X1 ** 2 + c
+```
+
+```{r}
+Y <- 0.1 * X1 + 0.2 * X2 - w
+```
+
+```{r}
+x1  <- 1
+x1_prime <- 2
+x2 <- 1
+```
+
+$E[Y(X_1,X_2,ω)∣X_1 = x_1,X_2 = x_2]$
+
+```{r}
+mean1 <- mean(Y[X1 == x1 & X2 == x2])
+mean1
+```
+
+(Because $E[Y(1,2,1^2+c)∣X_1 = 1,X_2 = 2] = 0.1 + 0.2 - 1 - E[c∣X_1 = 1,X_2 = 2] = -0.7.$)
+
+$E[Y(X_1,X_2,ω)∣X_1 = x_1^\prime,X_2 = x_2]$
+
+```{r}
+mean2 <- mean(Y[X1 == x1_prime & X2 == x2])
+mean2
+```
+
+(Because $E[Y(1,2,2^2+c)∣X_1 = 2,X_2 = 2] = 0.2 + 0.2 - 4 - E[c∣X_1 = 1,X_2 = 2] = -3.6.$)
+
+```{r}
+mean2 - mean1
+```
+
+The conditional average treatment effect is not recovered.
+
+Now let's assume $X_1$ and $ω$ are independent given $X_2$: we change the distribution of ω to be
+
+$$
+\Pr(ω=0) = \Pr(ω=2) = 0.2 \\
+\Pr(ω=3) = \Pr(ω=5) = 0.3
+$$
+
+so that the marginal distribution of $ω$ keeps the same.
+
+```{r}
+prob = runif(N)
+
+w <- rep(0, N)
+w[prob > 0.2 & prob <= 0.4] <- 2
+w[prob > 0.4 & prob <= 0.7] <- 3
+w[prob > 0.7] <- 5
+
+Y <- 0.1 * X1 + 0.2 * X2 - w
+```
+
+```{r}
+mean1 <- mean(Y[X1 == 1 & X2 == 1])
+mean1
+```
+
+```{r}
+mean2 <- mean(Y[X1 == 2 & X2 == 1])
+mean2
+```
+
+```{r}
+mean2 - mean1
+```
+
+The conditional ATE is recovered.
+
