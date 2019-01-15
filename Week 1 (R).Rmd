@@ -1,5 +1,5 @@
 ---
-title: "R Notebook"
+title: "Estimating Conidtional Average Treatment Effect"
 output: html_notebook
 ---
 Assume the outcome random variable $Y$ has the functional form 
