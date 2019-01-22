@@ -1,0 +1,71 @@
+---
+title: "PS2 - Q14"
+output: html_notebook
+---
+```{r}
+set.seed(1234)
+N = 1000 # sample size
+```
+
+(a)
+data generating:
+
+```{r}
+x1 <- rnorm(N)
+x2 <- rnorm(N)
+epsilon <- rnorm(N)
+
+y = 1 + x1 + x2 + epsilon
+```
+
+OLS regression:
+
+```{r}
+fit <- lm(y ~ x1 + x2)
+fit$coefficients
+```
+
+(b)
+
+residuals and regressors are orthogonal. 
+
+```{r}
+sum(fit$residuals)
+```
+
+```{r}
+x1 %*% fit$residuals
+```
+
+```{r}
+x2 %*% fit$residuals
+```
+
+(c)
+true residuals are not orthogonal with residuals.
+
+```{r}
+sum(epsilon)
+```
+
+```{r}
+x1 %*% epsilon
+```
+
+```{r}
+x2 %*% epsilon
+```
+
+(d)
+auxiliary regression:
+
+```{r}
+fit_aux = lm(x1 ~ x2)
+fit_aux$coefficients
+```
+
+```{r}
+fit2 = lm(y ~ fit_aux$residuals + 0)
+fit2$coefficients
+```
+
